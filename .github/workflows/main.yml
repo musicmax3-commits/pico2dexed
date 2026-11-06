@@ -1,4 +1,4 @@
-name: Build Pico2Dexed
+name: Build Pico2Dexed Corretto
 
 on:
   push:
@@ -15,24 +15,21 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install ARM GCC Toolchain
-      uses: gcc-arm-embedded/program-arm-embedded-toolchain-action@v1
-
-    - name: Install CMake & Ninja
+    - name: Install Tools and ARM GCC
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake ninja-build
+        sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
 
-    - name: Download Pico SDK
+    - name: Download Pico SDK 2.0
       run: |
         git clone --depth 1 --branch 2.0.0 https://github.com
         cd pico-sdk
         git submodule update --init
 
-    - name: Configure CMake
+    - name: Configure CMake per RP2350
       run: |
         export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
-        cmake -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350
+        cmake -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350 -DENABLE_OLED=1 -DENABLE_ENCODER=1
 
     - name: Build Project
       run: |
@@ -42,5 +39,5 @@ jobs:
     - name: Upload UF2 Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: pico2dexed-firmware
+        name: pico2dexed-funzionante
         path: build/*.uf2

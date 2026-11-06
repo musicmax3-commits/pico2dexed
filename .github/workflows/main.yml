@@ -1,0 +1,46 @@
+name: Build Pico2Dexed
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install ARM GCC Toolchain
+      uses: gcc-arm-embedded/program-arm-embedded-toolchain-action@v1
+
+    - name: Install CMake & Ninja
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+
+    - name: Download Pico SDK
+      run: |
+        git clone --depth 1 --branch 2.0.0 https://github.com
+        cd pico-sdk
+        git submodule update --init
+
+    - name: Configure CMake
+      run: |
+        export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
+        cmake -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350
+
+    - name: Build Project
+      run: |
+        export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
+        cmake --build build
+
+    - name: Upload UF2 Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pico2dexed-firmware
+        path: build/*.uf2
